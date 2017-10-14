@@ -21,6 +21,7 @@ public class board : MonoBehaviour
     private Rect extents = Rect.zero;
     private float gelZeroX = 0;
     private float gelZeroY = 0;
+    private float gelStep = 0;
     private float offY = 0;
     private Vector2 swipeDir = Vector2.zero;
 
@@ -28,6 +29,11 @@ public class board : MonoBehaviour
     private gel touchPartner = null;
     private Vector2 touchStart = Vector2.zero;
     private bool touchTracking = false;
+
+    private Vector2 DIR_NORTH = new Vector2(0, 1);
+    private Vector2 DIR_SOUTH = new Vector2(0, -1);
+    private Vector2 DIR_WEST = new Vector2(-1, 0);
+    private Vector2 DIR_EAST = new Vector2(1, 0);
 
     private List<List<gel>> gels = new List<List<gel>>();
 
@@ -42,7 +48,7 @@ public class board : MonoBehaviour
     {
         doInput();
 
-        if (swipeDir != Vector2.zero) 
+        if (swipeDir != Vector2.zero)
             doSwipe();
 
         // evaluate board
@@ -81,6 +87,7 @@ public class board : MonoBehaviour
         extents = new Rect(extentLeft, extentTop, extentWidth, extentHeight);
         gelZeroX = extentLeft + Padding + (GelScale / 2.0f);
         gelZeroY = extentTop + Padding + (GelScale / 2.0f);
+        gelStep = Padding + GelScale;
         offY = extentTop - Camera.main.orthographicSize;
     }
 
@@ -212,7 +219,51 @@ public class board : MonoBehaviour
 
     bool isGoodSwap(gel a, gel b)
     {
-        return true;
+        // 2 North, checking south
+        if (hasMatchOnPath(a, calcRelPos(a, DIR_NORTH, 2), DIR_SOUTH, 5)) return true;
+        if (hasMatchOnPath(b, calcRelPos(b, DIR_NORTH, 2), DIR_SOUTH, 5)) return true;
+
+        // 2 South, checking north
+        if (hasMatchOnPath(a, calcRelPos(a, DIR_SOUTH, 2), DIR_NORTH, 5)) return true;
+        if (hasMatchOnPath(b, calcRelPos(b, DIR_SOUTH, 2), DIR_NORTH, 5)) return true;
+
+        // 2 West, checking east
+        if (hasMatchOnPath(a, calcRelPos(a, DIR_WEST, 2), DIR_EAST, 5)) return true;
+        if (hasMatchOnPath(b, calcRelPos(b, DIR_WEST, 2), DIR_EAST, 5)) return true;
+
+        // 2 East, checking west
+        if (hasMatchOnPath(a, calcRelPos(a, DIR_EAST, 2), DIR_WEST, 5)) return true;
+        if (hasMatchOnPath(b, calcRelPos(b, DIR_EAST, 2), DIR_WEST, 5)) return true;
+
+        return false;
+    }
+
+    Vector2 calcRelPos(gel g, Vector2 dir, int hops)
+    {
+        return (Vector2)g.transform.position + (dir * (hops * gelStep));
+
+    }
+
+    bool hasMatchOnPath(gel g, Vector2 pos, Vector2 dir, int limit)
+    {
+        float dist = limit * gelStep;
+        RaycastHit2D[] hits = Physics2D.RaycastAll(pos, dir, dist);
+
+        // Shortcut - impossible to have match 3 with fewer hits (probably went off the board)
+        if (hits.Length < 3) return false;
+
+        int count = 0;
+        for (int i = 0; i < hits.Length; i++)
+        {
+            if (hits[i].collider.gameObject.name == g.gameObject.name)
+                count++;
+            else
+                count = 0;
+
+            if (count == 3)
+                return true;
+        }
+        return false;
     }
 
 }
