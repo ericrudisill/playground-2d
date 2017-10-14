@@ -251,6 +251,7 @@ public class board : MonoBehaviour
                     {
                         markMatches();
                         markMatchNeighbors();
+                        processMatches();
                     }
                 });
         }
@@ -363,4 +364,18 @@ public class board : MonoBehaviour
         return false;
     }
 
+    void processMatches()
+    {
+        for (int y = 0; y < GelRows; y++)
+        {
+            for (int x = 0; x < GelColumns; x++)
+            {
+                gel g = getGel(x, y);
+                if (g != null && g.IsMatched)
+                {
+                    g.Pop();
+                }
+            }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class gel : MonoBehaviour {
 
@@ -27,5 +28,11 @@ public class gel : MonoBehaviour {
     public bool IsMatched
     {
         get { return isMatched;  }
+    }
+
+    public void Pop()
+    {
+        transform.DOScale(0.01f, 0.25f)
+            .OnComplete(() => Destroy(this.gameObject));
     }
 }
