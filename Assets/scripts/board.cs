@@ -12,6 +12,7 @@ public class board : MonoBehaviour
     public float GelScale = 1.0f;
     public float Padding = 0.15f;
     public float TweenFallDuration = 0.20f;
+    public float TweenSwapDuration = 0.1f;
     public float TweenRndColumn = 0.1f;
     public float TweenRndRow = 0.05f;
     public float DragDistance = 1.0f;
@@ -22,11 +23,13 @@ public class board : MonoBehaviour
     private float gelZeroY = 0;
     private float offY = 0;
     private Vector2 swipeDir = Vector2.zero;
-    
 
     private gel touchGel = null;
+    private gel touchPartner = null;
     private Vector2 touchStart = Vector2.zero;
     private bool touchTracking = false;
+
+    private List<List<gel>> gels = new List<List<gel>>();
 
     // Use this for initialization
     void Start()
@@ -39,8 +42,11 @@ public class board : MonoBehaviour
     {
         doInput();
 
-        if (swipeDir != Vector2.zero)
+        if (swipeDir != Vector2.zero) 
             doSwipe();
+
+        // evaluate board
+
     }
 
     private void OnDrawGizmos()
@@ -53,11 +59,15 @@ public class board : MonoBehaviour
     void drawBoard()
     {
         calculateExtents();
+        gels = new List<List<gel>>();
         for (int y = 0; y < GelRows; y++)
         {
+            List<gel> row = new List<gel>();
+            gels.Add(row);
             for (int x = 0; x < GelColumns; x++)
             {
-                dropGel(x, y);
+                gel g = dropGel(x, y);
+                row.Add(g);
             }
         }
     }
@@ -176,8 +186,33 @@ public class board : MonoBehaviour
 
     void doSwipe()
     {
-        Vector2 target = (Vector2)touchGel.transform.position + (swipeDir * (Padding + GelScale));
-        if (extents.Contains(target))
-            touchGel.transform.DOMove(target, 0.1f);
+        // Raycast will hit self, so temporarily turn off gel's collider
+        Collider2D c = touchGel.GetComponent<Collider2D>();
+        c.enabled = false;
+        RaycastHit2D hit = Physics2D.Raycast(touchGel.transform.position, swipeDir);
+        c.enabled = true;
+
+        if (hit)
+        {
+            touchPartner = hit.collider.transform.GetComponent<gel>();
+            Vector2 touchGelOld = new Vector2(touchGel.transform.position.x, touchGel.transform.position.y);
+            Vector2 touchPartnerOld = new Vector2(touchPartner.transform.position.x, touchPartner.transform.position.y);
+            touchGel.transform.DOMove(hit.collider.transform.position, TweenSwapDuration);
+            touchPartner.transform.DOMove(touchGel.transform.position, TweenSwapDuration)
+                .OnComplete(() =>
+                {
+                    if (isGoodSwap(touchGel, touchPartner) == false)
+                    {
+                        touchGel.transform.DOMove(touchGelOld, TweenSwapDuration);
+                        touchPartner.transform.DOMove(touchPartnerOld, TweenSwapDuration);
+                    }
+                });
+        }
     }
+
+    bool isGoodSwap(gel a, gel b)
+    {
+        return true;
+    }
+
 }
