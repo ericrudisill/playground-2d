@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using DG.Tweening;
 
@@ -91,9 +92,36 @@ public class board : MonoBehaviour
         offY = extentTop - Camera.main.orthographicSize;
     }
 
-    GameObject pick()
+    GameObject pick(float x, float y)
     {
-        return GelPrefabs[Random.Range(0, GelPrefabs.Length)];
+        List<GameObject> deck = new List<GameObject>(GelPrefabs);
+        List<GameObject> neighbors = getNeighbors(x, y);
+        foreach (GameObject g in neighbors)
+            deck.Remove(deck.Find(f => g.name.StartsWith(f.name)));
+        Debug.Log(deck.Count);
+        return deck[Random.Range(0, deck.Count)];
+    }
+
+    List<GameObject> getNeighbors(float x, float y)
+    {
+        List<GameObject> neighbors = new List<GameObject>();
+        Vector2 center = new Vector2(x, y);
+        GameObject g;
+
+        g = getNeighbor(center, DIR_NORTH); if (g != null) neighbors.Add(g);
+        g = getNeighbor(center, DIR_SOUTH); if (g != null) neighbors.Add(g);
+        g = getNeighbor(center, DIR_EAST); if (g != null) neighbors.Add(g);
+        g = getNeighbor(center, DIR_WEST); if (g != null) neighbors.Add(g);
+
+        return neighbors;
+    }
+
+    GameObject getNeighbor(Vector2 pos, Vector2 dir)
+    {
+        Vector2 target = pos + (dir * gelStep);
+        Collider2D hit = Physics2D.OverlapPoint(target);
+        if (hit) return hit.transform.gameObject;
+        return null;
     }
 
     gel dropGel(int x, int y)
@@ -101,7 +129,7 @@ public class board : MonoBehaviour
         float u, v;
         u = gelZeroX + (x * (Padding + GelScale));
         v = gelZeroY + (y * (Padding + GelScale)) - offY;
-        gel g = Instantiate(pick(), new Vector3(u, v, 0), Quaternion.identity).GetComponent<gel>();
+        gel g = Instantiate(pick(u, v), new Vector3(u, v, 0), Quaternion.identity).GetComponent<gel>();
         g.transform.DOMoveY(v + offY, TweenFallDuration)
             .SetEase(Ease.InOutQuad)
             .SetDelay(Random.Range(0, TweenRndColumn) + (y * TweenRndRow))

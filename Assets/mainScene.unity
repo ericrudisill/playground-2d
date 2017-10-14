@@ -227,11 +227,14 @@ MonoBehaviour:
   - {fileID: 1543990587738104, guid: ffe526508613dc14ba2d1c1ad2fb97cc, type: 2}
   GelColumns: 7
   GelRows: 8
-  GelScale: {x: 1, y: 1}
+  GelScale: 1
   Padding: 0.15
   TweenFallDuration: 0.2
+  TweenSwapDuration: 0.1
   TweenRndColumn: 0.1
   TweenRndRow: 0.05
+  DragDistance: 1
+  SwipeAngleLimit: 30
 --- !u!4 &1258331093
 Transform:
   m_ObjectHideFlags: 0
