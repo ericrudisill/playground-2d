@@ -9,7 +9,7 @@ public class board : MonoBehaviour
     public GameObject[] GelPrefabs;
     public int GelColumns = 7;
     public int GelRows = 8;
-    public Vector2 GelScale = new Vector2(1.0f, 1.0f);
+    public float GelScale = 1.0f;
     public float Padding = 0.15f;
     public float TweenFallDuration = 0.20f;
     public float TweenRndColumn = 0.1f;
@@ -17,10 +17,7 @@ public class board : MonoBehaviour
     public float DragDistance = 1.0f;
     public float SwipeAngleLimit = 30.0f;
 
-    private float extentWidth = 0;
-    private float extentHeight = 0;
-    private float extentLeft = 0;
-    private float extentTop = 0;
+    private Rect extents = Rect.zero;
     private float gelZeroX = 0;
     private float gelZeroY = 0;
     private float offY = 0;
@@ -41,13 +38,16 @@ public class board : MonoBehaviour
     void Update()
     {
         doInput();
+
+        if (swipeDir != Vector2.zero)
+            doSwipe();
     }
 
     private void OnDrawGizmos()
     {
         calculateExtents();
         Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(transform.position, new Vector3(extentWidth, extentHeight, 1));
+        Gizmos.DrawWireCube(transform.position, new Vector3(extents.width, extents.height, 1));
     }
 
     void drawBoard()
@@ -64,12 +64,13 @@ public class board : MonoBehaviour
 
     void calculateExtents()
     {
-        extentWidth = (Padding * (GelColumns + 1)) + (GelScale.x * GelColumns);
-        extentHeight = (Padding * (GelRows + 1)) + (GelScale.y * GelRows);
-        extentLeft = transform.position.x - (extentWidth / 2.0f);
-        extentTop = transform.position.y - (extentHeight / 2.0f);
-        gelZeroX = extentLeft + Padding + (GelScale.x / 2.0f);
-        gelZeroY = extentTop + Padding + (GelScale.y / 2.0f);
+        float extentWidth = (Padding * (GelColumns + 1)) + (GelScale * GelColumns);
+        float extentHeight = (Padding * (GelRows + 1)) + (GelScale * GelRows);
+        float extentLeft = transform.position.x - (extentWidth / 2.0f);
+        float extentTop = transform.position.y - (extentHeight / 2.0f);
+        extents = new Rect(extentLeft, extentTop, extentWidth, extentHeight);
+        gelZeroX = extentLeft + Padding + (GelScale / 2.0f);
+        gelZeroY = extentTop + Padding + (GelScale / 2.0f);
         offY = extentTop - Camera.main.orthographicSize;
     }
 
@@ -81,10 +82,9 @@ public class board : MonoBehaviour
     gel dropGel(int x, int y)
     {
         float u, v;
-        u = gelZeroX + (x * (Padding + GelScale.x));
-        v = gelZeroY + (y * (Padding + GelScale.y)) - offY;
+        u = gelZeroX + (x * (Padding + GelScale));
+        v = gelZeroY + (y * (Padding + GelScale)) - offY;
         gel g = Instantiate(pick(), new Vector3(u, v, 0), Quaternion.identity).GetComponent<gel>();
-        g.Init(x, y);
         g.transform.DOMoveY(v + offY, TweenFallDuration)
             .SetEase(Ease.InOutQuad)
             .SetDelay(Random.Range(0, TweenRndColumn) + (y * TweenRndRow))
@@ -94,6 +94,8 @@ public class board : MonoBehaviour
 
     void doInput()
     {
+        swipeDir = Vector2.zero;
+
         if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
         {
             //TODO: Implement touch input
@@ -125,7 +127,6 @@ public class board : MonoBehaviour
             touchGel = hit.transform.GetComponent<gel>();
             touchStart = touchPos;
             touchTracking = true;
-            Debug.Log(string.Format("hit ({0},{1})", touchGel.Col, touchGel.Row));
         }
     }
 
@@ -141,7 +142,6 @@ public class board : MonoBehaviour
             {
                 touchTracking = false;
                 swipeDir = calculateDir(touchStart, touchPos);
-                Debug.Log("swipeDir " + swipeDir);
             }
         }
     }
@@ -172,5 +172,12 @@ public class board : MonoBehaviour
             result.x = 1f;
 
         return result;
+    }
+
+    void doSwipe()
+    {
+        Vector2 target = (Vector2)touchGel.transform.position + (swipeDir * (Padding + GelScale));
+        if (extents.Contains(target))
+            touchGel.transform.DOMove(target, 0.1f);
     }
 }

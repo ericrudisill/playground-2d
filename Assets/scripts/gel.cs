@@ -15,10 +15,4 @@ public class gel : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 	}
-
-    public void Init(int col, int row)
-    {
-        Col = col;
-        Row = row;
-    }
 }
