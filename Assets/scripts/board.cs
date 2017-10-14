@@ -51,9 +51,6 @@ public class board : MonoBehaviour
 
         if (swipeDir != Vector2.zero)
             doSwipe();
-
-        // evaluate board
-
     }
 
     private void OnDrawGizmos()
@@ -121,6 +118,16 @@ public class board : MonoBehaviour
         Vector2 target = pos + (dir * gelStep);
         Collider2D hit = Physics2D.OverlapPoint(target);
         if (hit) return hit.transform.gameObject;
+        return null;
+    }
+
+    gel getGel(int x, int y)
+    {
+        float u, v;
+        u = gelZeroX + (x * (Padding + GelScale));
+        v = gelZeroY + (y * (Padding + GelScale));
+        Collider2D hit = Physics2D.OverlapPoint(new Vector2(u, v));
+        if (hit) return hit.gameObject.GetComponent<gel>();
         return null;
     }
 
@@ -240,6 +247,10 @@ public class board : MonoBehaviour
                     {
                         touchGel.transform.DOMove(touchGelOld, TweenSwapDuration);
                         touchPartner.transform.DOMove(touchPartnerOld, TweenSwapDuration);
+                    } else
+                    {
+                        markMatches();
+                        markMatchNeighbors();
                     }
                 });
         }
@@ -291,6 +302,64 @@ public class board : MonoBehaviour
             if (count == 3)
                 return true;
         }
+        return false;
+    }
+
+    void markMatches()
+    {
+        for (int y = 0; y < GelRows; y++)
+        {
+            for (int x = 0; x < GelColumns; x++)
+            {
+                gel g = getGel(x, y);
+                if (g)
+                {
+                    markMatchesOnPath(g, DIR_EAST);
+                    markMatchesOnPath(g, DIR_NORTH);
+                }
+            }
+        }
+    }
+
+    void markMatchNeighbors()
+    {
+        for (int y = 0; y < GelRows; y++)
+        {
+            for (int x = 0; x < GelColumns; x++)
+            {
+                gel g = getGel(x, y);
+                if (g != null && g.IsMatched)
+                {
+                    List<GameObject> neighbors = getNeighbors(g.transform.position.x, g.transform.position.y);
+                    foreach (GameObject n in neighbors)
+                    {
+                        if (n.name == g.gameObject.name)
+                        {
+                            n.GetComponent<gel>().SetMatched();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    bool markMatchesOnPath(gel g, Vector2 dir)
+    {
+        float dist = 3 * gelStep;
+        RaycastHit2D[] hits = Physics2D.RaycastAll(g.transform.position, dir, dist);
+
+        // Shortcut - impossible to have match 3 with fewer hits (probably went off the board)
+        if (hits.Length < 3) return false;
+
+        // We know hit 0 is the parameter g, so just check hit 1 and 2
+        if (hits[1].transform.gameObject.name == g.gameObject.name && hits[2].transform.gameObject.name == g.gameObject.name)
+        {
+            g.SetMatched();
+            hits[1].transform.GetComponent<gel>().SetMatched();
+            hits[2].transform.GetComponent<gel>().SetMatched();
+            return true;
+        }
+
         return false;
     }
 
