@@ -249,10 +249,7 @@ public class board : MonoBehaviour
                         touchPartner.transform.DOMove(touchPartnerOld, TweenSwapDuration);
                     } else
                     {
-                        markMatches();
-                        markMatchNeighbors();
-                        processMatches();
-                        StartCoroutine(applyGravity());
+                        StartCoroutine(doBoard());
                     }
                 });
         }
@@ -307,8 +304,9 @@ public class board : MonoBehaviour
         return false;
     }
 
-    void markMatches()
+    bool markMatches()
     {
+        bool hasMatches = false;
         for (int y = 0; y < GelRows; y++)
         {
             for (int x = 0; x < GelColumns; x++)
@@ -316,11 +314,12 @@ public class board : MonoBehaviour
                 gel g = getGel(x, y);
                 if (g)
                 {
-                    markMatchesOnPath(g, DIR_EAST);
-                    markMatchesOnPath(g, DIR_NORTH);
+                    hasMatches |= markMatchesOnPath(g, DIR_EAST);
+                    hasMatches |= markMatchesOnPath(g, DIR_NORTH);
                 }
             }
         }
+        return hasMatches;
     }
 
     void markMatchNeighbors()
@@ -389,6 +388,7 @@ public class board : MonoBehaviour
 
         yield return new WaitForSeconds(0.5f);
 
+        float maxDuration = 0;
         for (int x=0;x<GelColumns;x++)
         {
             int emptyCount = 0;
@@ -403,9 +403,22 @@ public class board : MonoBehaviour
                 {
                     float newY = g.transform.position.y - (emptyCount * gelStep);
                     float duration = TweenSwapDuration * emptyCount;
+                    if (duration > maxDuration) maxDuration = duration;
                     g.transform.DOMoveY(newY, duration);
                 }
             }
+        }
+
+        yield return new WaitForSeconds(maxDuration);
+    }
+
+    IEnumerator doBoard()
+    {
+        while (markMatches())
+        {
+            markMatchNeighbors();
+            processMatches();
+            yield return applyGravity();
         }
     }
 }
