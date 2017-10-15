@@ -252,6 +252,7 @@ public class board : MonoBehaviour
                         markMatches();
                         markMatchNeighbors();
                         processMatches();
+                        StartCoroutine(applyGravity());
                     }
                 });
         }
@@ -374,6 +375,35 @@ public class board : MonoBehaviour
                 if (g != null && g.IsMatched)
                 {
                     g.Pop();
+                }
+            }
+        }
+    }
+
+    IEnumerator applyGravity()
+    {
+        // For each column, walk north until empty.
+        // Increment for each empty until non-empty found
+        // Set non-empty to fall south empty-count cells, calculate duration accordingly
+        // Keep walking north until finished
+
+        yield return new WaitForSeconds(0.5f);
+
+        for (int x=0;x<GelColumns;x++)
+        {
+            int emptyCount = 0;
+            for (int y=0;y<GelRows;y++)
+            {
+                gel g = getGel(x, y);
+                if (g == null)
+                {
+                    emptyCount++;
+                }
+                else
+                {
+                    float newY = g.transform.position.y - (emptyCount * gelStep);
+                    float duration = TweenSwapDuration * emptyCount;
+                    g.transform.DOMoveY(newY, duration);
                 }
             }
         }
