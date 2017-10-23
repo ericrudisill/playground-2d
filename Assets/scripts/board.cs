@@ -38,6 +38,8 @@ public class board : MonoBehaviour
 
     private List<List<gel>> gels = new List<List<gel>>();
 
+	private bool isTouchable = true;
+
     // Use this for initialization
     void Start()
     {
@@ -47,10 +49,12 @@ public class board : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        doInput();
+		if (isTouchable) {
+			doInput ();
 
-        if (swipeDir != Vector2.zero)
-            doSwipe();
+			if (swipeDir != Vector2.zero)
+				doSwipe ();
+		}
     }
 
     private void OnDrawGizmos()
@@ -415,11 +419,13 @@ public class board : MonoBehaviour
 
     IEnumerator doBoard()
     {
+		isTouchable = false;
         while (markMatches())
         {
             markMatchNeighbors();
             processMatches();
             yield return applyGravity();
         }
+		isTouchable = true;
     }
 }
