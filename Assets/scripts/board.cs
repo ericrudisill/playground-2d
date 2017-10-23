@@ -346,7 +346,8 @@ public class board : MonoBehaviour
 
     bool markMatchesOnPath(gel g, Vector2 dir)
     {
-        float dist = 3 * gelStep;
+		// Search two additonal gels in dir (self + 2 = 3)
+        float dist = 2 * gelStep; 
         RaycastHit2D[] hits = Physics2D.RaycastAll(g.transform.position, dir, dist);
 
         // Shortcut - impossible to have match 3 with fewer hits (probably went off the board)
