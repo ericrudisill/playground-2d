@@ -437,7 +437,7 @@ public class board : MonoBehaviour
             {
                 gel g = getGel(x, y);
                 if (g == null)
-                    dropGel(x, y);
+                    dropGel(x, y);  //TODO: Pick evaluates -offY, so it doesn't work right. Find alternative.
             }
         }
         yield return new WaitForSeconds(TweenFallDuration);

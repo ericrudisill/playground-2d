@@ -233,6 +233,7 @@ MonoBehaviour:
   TweenSwapDuration: 0.1
   TweenRndColumn: 0.1
   TweenRndRow: 0.05
+  GravityDelay: 0.2
   DragDistance: 1
   SwipeAngleLimit: 30
 --- !u!4 &1258331093
