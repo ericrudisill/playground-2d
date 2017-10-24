@@ -8,6 +8,7 @@ public class gel : MonoBehaviour {
     public bool IsTouchable = false;
     public int Col = 0;
     public int Row = 0;
+    public float ShrinkDuration = 0.15f;
 
     private bool isMatched = false;
 
@@ -32,7 +33,7 @@ public class gel : MonoBehaviour {
 
     public void Pop()
     {
-        transform.DOScale(0.01f, 0.25f)
+        transform.DOScale(0.01f, ShrinkDuration)
             .OnComplete(() => Destroy(this.gameObject));
     }
 }

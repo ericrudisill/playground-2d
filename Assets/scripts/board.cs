@@ -16,6 +16,7 @@ public class board : MonoBehaviour
     public float TweenSwapDuration = 0.1f;
     public float TweenRndColumn = 0.1f;
     public float TweenRndRow = 0.05f;
+    public float GravityDelay = 0.2f;
     public float DragDistance = 1.0f;
     public float SwipeAngleLimit = 30.0f;
 
@@ -35,8 +36,6 @@ public class board : MonoBehaviour
     private Vector2 DIR_SOUTH = new Vector2(0, -1);
     private Vector2 DIR_WEST = new Vector2(-1, 0);
     private Vector2 DIR_EAST = new Vector2(1, 0);
-
-    private List<List<gel>> gels = new List<List<gel>>();
 
     private bool isTouchable = true;
 
@@ -68,15 +67,11 @@ public class board : MonoBehaviour
     void drawBoard()
     {
         calculateExtents();
-        gels = new List<List<gel>>();
         for (int y = 0; y < GelRows; y++)
         {
-            List<gel> row = new List<gel>();
-            gels.Add(row);
             for (int x = 0; x < GelColumns; x++)
             {
                 gel g = dropGel(x, y);
-                row.Add(g);
             }
         }
     }
@@ -392,7 +387,7 @@ public class board : MonoBehaviour
         // Set non-empty to fall south empty-count cells, calculate duration accordingly
         // Keep walking north until finished
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(GravityDelay);
 
         float maxDuration = 0;
         for (int x = 0; x < GelColumns; x++)
@@ -427,11 +422,28 @@ public class board : MonoBehaviour
             processMatches();
             yield return applyGravity();
         }
-        scanForSwaps();
+        if (stillHasSwaps() == false)
+        {
+            yield return fillBoard();
+        }
         isTouchable = true;
     }
 
-    void scanForSwaps()
+    IEnumerator fillBoard()
+    {
+        for (int y=0;y<GelRows;y++)
+        {
+            for (int x=0;x<GelColumns;x++)
+            {
+                gel g = getGel(x, y);
+                if (g == null)
+                    dropGel(x, y);
+            }
+        }
+        yield return new WaitForSeconds(TweenFallDuration);
+    }
+
+    bool stillHasSwaps()
     {
         gel candidate1 = null, candidate2 = null;
         for (int y = 0; y < GelRows; y++)
@@ -467,10 +479,12 @@ public class board : MonoBehaviour
         if (candidate1 != null)
         {
             Debug.Log("Still has swaps!");
+            return true;
         }
         else
         {
             Debug.Log("NO SWAPS LEFT!!!");
+            return false;
         }
     }
 
@@ -526,10 +540,8 @@ public class board : MonoBehaviour
         for (int v = y - 2; v <= y + 2; v++)
         {
             k = 0;
-
             for (int u = x - 2; u <= x + 2; u++)
             {
-
                 // Calling getGel is a bit inefficient, but gets the job done
                 gel g = getGel(u, v);
                 if (g != null)
