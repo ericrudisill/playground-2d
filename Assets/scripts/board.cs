@@ -38,7 +38,7 @@ public class board : MonoBehaviour
 
     private List<List<gel>> gels = new List<List<gel>>();
 
-	private bool isTouchable = true;
+    private bool isTouchable = true;
 
     // Use this for initialization
     void Start()
@@ -49,12 +49,13 @@ public class board : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-		if (isTouchable) {
-			doInput ();
+        if (isTouchable)
+        {
+            doInput();
 
-			if (swipeDir != Vector2.zero)
-				doSwipe ();
-		}
+            if (swipeDir != Vector2.zero)
+                doSwipe();
+        }
     }
 
     private void OnDrawGizmos()
@@ -99,7 +100,6 @@ public class board : MonoBehaviour
         List<GameObject> neighbors = getNeighbors(x, y);
         foreach (GameObject g in neighbors)
             deck.Remove(deck.Find(f => g.name.StartsWith(f.name)));
-        Debug.Log(deck.Count);
         return deck[Random.Range(0, deck.Count)];
     }
 
@@ -251,7 +251,8 @@ public class board : MonoBehaviour
                     {
                         touchGel.transform.DOMove(touchGelOld, TweenSwapDuration);
                         touchPartner.transform.DOMove(touchPartnerOld, TweenSwapDuration);
-                    } else
+                    }
+                    else
                     {
                         StartCoroutine(doBoard());
                     }
@@ -350,8 +351,8 @@ public class board : MonoBehaviour
 
     bool markMatchesOnPath(gel g, Vector2 dir)
     {
-		// Search two additonal gels in dir (self + 2 = 3)
-        float dist = 2 * gelStep; 
+        // Search two additonal gels in dir (self + 2 = 3)
+        float dist = 2 * gelStep;
         RaycastHit2D[] hits = Physics2D.RaycastAll(g.transform.position, dir, dist);
 
         // Shortcut - impossible to have match 3 with fewer hits (probably went off the board)
@@ -394,10 +395,10 @@ public class board : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
 
         float maxDuration = 0;
-        for (int x=0;x<GelColumns;x++)
+        for (int x = 0; x < GelColumns; x++)
         {
             int emptyCount = 0;
-            for (int y=0;y<GelRows;y++)
+            for (int y = 0; y < GelRows; y++)
             {
                 gel g = getGel(x, y);
                 if (g == null)
@@ -419,47 +420,124 @@ public class board : MonoBehaviour
 
     IEnumerator doBoard()
     {
-		isTouchable = false;
+        isTouchable = false;
         while (markMatches())
         {
             markMatchNeighbors();
             processMatches();
             yield return applyGravity();
         }
-		scanForSwaps ();
-		isTouchable = true;
+        scanForSwaps();
+        isTouchable = true;
     }
 
-	void scanForSwaps() {
-		for (int y = 0; y < GelRows; y++) {
-			for (int x = 0; x < GelColumns; x++) {
-				gel[,] kernel = getKernel (x, y);
-				if (kernel != null) {
-					Debug.Log ("Kernel!");
-				}
-			}
-		}
-	}
+    void scanForSwaps()
+    {
+        gel candidate1 = null, candidate2 = null;
+        for (int y = 0; y < GelRows; y++)
+        {
+            for (int x = 0; x < GelColumns; x++)
+            {
+                gel[,] kernel = getKernel(x, y);
+                if (kernel != null)
+                {
+                    // Try to swap East
+                    if (tryKernelSwap(kernel, 2, 1))
+                    {
+                        if (kernalHasMatch(kernel))
+                        {
+                            candidate1 = kernel[1, 1];
+                            candidate2 = kernel[1, 2];
+                        }
+                        // Swap back
+                        tryKernelSwap(kernel, 2, 1);
+                    }
+                    // Try to swap North
+                    if (tryKernelSwap(kernel, 1, 2))
+                    {
+                        if (kernalHasMatch(kernel))
+                        {
+                            candidate1 = kernel[1, 1];
+                            candidate2 = kernel[2, 1];
+                        }
+                    }
+                }
+            }
+        }
+        if (candidate1 != null)
+        {
+            Debug.Log("Still has swaps!");
+        }
+        else
+        {
+            Debug.Log("NO SWAPS LEFT!!!");
+        }
+    }
 
-	gel[,] getKernel(int x, int y) {
-		gel[,] kernel = new gel[5, 5];
-		gel center = getGel (x, y);
-		if (center == null)
-			return null;
-		int j=0, k = 0;
-		for (int v = y - 2; v < y + 2; v++) {
-			k = 0;
+    bool kernalHasMatch(gel[,] kernel)
+    {
+        for (int y = 0; y < 3; y++)
+        {
+            for (int x = 0; x < 3; x++)
+            {
+                if (gelCompare(kernel[y, x], kernel[y + 1, x]) && gelCompare(kernel[y, x], kernel[y + 2, x]))
+                {
+                    return true;
+                }
+                if (gelCompare(kernel[y, x], kernel[y, x + 1]) && gelCompare(kernel[y, x], kernel[y, x + 2]))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
-			for (int u = x - 2; u < x + 2; u++) {
-				
-				// Calling getGel is a bit inefficient, but gets the job done
-				gel g = getGel(u,v);
-				if (g != null)
-					kernel [j, k] = g;
-				k++;
-			}
-			j++;
-		}
-		return kernel;
-	}
+    bool gelCompare(gel a, gel b)
+    {
+        if (a == null || b == null)
+            return false;
+        if (a.name != b.name)
+            return false;
+        return true;
+    }
+
+    /**
+     * Swaps center element with element at targetX/Y. 
+     * Returns false if target is null
+     **/
+    bool tryKernelSwap(gel[,] kernel, int targetX, int targetY)
+    {
+        gel target = kernel[targetY, targetX];
+        if (target == null)
+            return false;
+        kernel[targetY, targetX] = kernel[1, 1];
+        kernel[1, 1] = target;
+        return true;
+    }
+
+    gel[,] getKernel(int x, int y)
+    {
+        gel[,] kernel = new gel[5, 5];
+        gel center = getGel(x, y);
+        if (center == null)
+            return null;
+        int j = 0, k = 0;
+        for (int v = y - 2; v <= y + 2; v++)
+        {
+            k = 0;
+
+            for (int u = x - 2; u <= x + 2; u++)
+            {
+
+                // Calling getGel is a bit inefficient, but gets the job done
+                gel g = getGel(u, v);
+                if (g != null)
+                    kernel[j, k] = g;
+                k++;
+            }
+            j++;
+        }
+        return kernel;
+    }
 }
