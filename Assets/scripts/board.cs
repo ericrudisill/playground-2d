@@ -426,6 +426,40 @@ public class board : MonoBehaviour
             processMatches();
             yield return applyGravity();
         }
+		scanForSwaps ();
 		isTouchable = true;
     }
+
+	void scanForSwaps() {
+		for (int y = 0; y < GelRows; y++) {
+			for (int x = 0; x < GelColumns; x++) {
+				gel[,] kernel = getKernel (x, y);
+				if (kernel != null) {
+					Debug.Log ("Kernel!");
+				}
+			}
+		}
+	}
+
+	gel[,] getKernel(int x, int y) {
+		gel[,] kernel = new gel[5, 5];
+		gel center = getGel (x, y);
+		if (center == null)
+			return null;
+		int j=0, k = 0;
+		for (int v = y - 2; v < y + 2; v++) {
+			k = 0;
+
+			for (int u = x - 2; u < x + 2; u++) {
+				
+				// Calling getGel is a bit inefficient, but gets the job done
+				gel g = getGel(u,v);
+				if (g != null)
+					kernel [j, k] = g;
+				k++;
+			}
+			j++;
+		}
+		return kernel;
+	}
 }
