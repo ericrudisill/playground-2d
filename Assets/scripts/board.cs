@@ -120,11 +120,11 @@ public class board : MonoBehaviour
         return null;
     }
 
-    gel getGel(int x, int y)
+    gel getGel(int x, int y, float offsetY = 0)
     {
         float u, v;
         u = gelZeroX + (x * (Padding + GelScale));
-        v = gelZeroY + (y * (Padding + GelScale));
+        v = gelZeroY + (y * (Padding + GelScale)) + offsetY;
         Collider2D hit = Physics2D.OverlapPoint(new Vector2(u, v));
         if (hit) return hit.gameObject.GetComponent<gel>();
         return null;
@@ -443,14 +443,28 @@ public class board : MonoBehaviour
 
     IEnumerator fillBoard()
     {
+        // Move the board off screen so dropGel works properly
+        GameObject[] gels = GameObject.FindGameObjectsWithTag("Gel");
+        foreach (GameObject go in gels)
+        {
+            go.transform.Translate(0, -offY, 0);
+        }
+
+        // Fill the board like normal
         for (int y=0;y<GelRows;y++)
         {
             for (int x=0;x<GelColumns;x++)
             {
-                gel g = getGel(x, y);
+                gel g = getGel(x, y, -offY);
                 if (g == null)
                     dropGel(x, y);  //TODO: Pick evaluates -offY, so it doesn't work right. Find alternative.
             }
+        }
+
+        // Move the original board back
+        foreach (GameObject go in gels)
+        {
+            go.transform.Translate(0, offY, 0);
         }
         yield return new WaitForSeconds(TweenFallDuration);
     }
