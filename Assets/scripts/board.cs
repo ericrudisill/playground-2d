@@ -149,7 +149,19 @@ public class board : MonoBehaviour
 
         if (Application.platform == RuntimePlatform.Android || Application.platform == RuntimePlatform.IPhonePlayer)
         {
-            //TODO: Implement touch input
+			if (Input.touchCount > 0)
+			{
+				Touch t = Input.GetTouch (0);
+				if (t.phase == TouchPhase.Began) {
+					doTouchBegin (t.position);
+				}
+				if (t.phase == TouchPhase.Ended) {
+					doTouchEnd (t.position);
+				}
+				if (t.phase == TouchPhase.Moved) {
+					doTouchMoved (t.position);
+				}
+			}
         }
         else
         {
