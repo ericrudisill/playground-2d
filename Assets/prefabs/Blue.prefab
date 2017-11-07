@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 61009754067458350}
   m_Layer: 0
   m_Name: Blue
-  m_TagString: Untagged
+  m_TagString: Gel
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -81,6 +81,7 @@ MonoBehaviour:
   IsTouchable: 0
   Col: 0
   Row: 0
+  ShrinkDuration: 0.15
 --- !u!212 &212765747447741358
 SpriteRenderer:
   m_ObjectHideFlags: 1
