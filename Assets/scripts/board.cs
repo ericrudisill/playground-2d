@@ -387,6 +387,7 @@ public class board : MonoBehaviour
                 if (g != null && g.IsMatched)
                 {
                     g.Pop();
+					// Apply score: score += GelScore
                 }
             }
         }
